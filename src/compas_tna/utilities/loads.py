@@ -118,10 +118,10 @@ class LoadUpdater(object):
                     p0_off = fkey_key_xyz[fkey][u]
                     p1_off = fkey_key_xyz[fkey][v]
                     p01_off = p1_off - p0_off
-                    a -= 0.25 * length_vector(cross_vectors(p01_off, p2 - p0_off))
+                    a -= 0.25 * length_vector(cross_vectors(p01_off, p3 - p0_off))
 
                 else:
-                    a += length_vector(p01) * self.width[0]/2
+                    a += length_vector(p01)/2 * self.width[0]/2
 
             areas[key_index[u]] = a
         return areas
