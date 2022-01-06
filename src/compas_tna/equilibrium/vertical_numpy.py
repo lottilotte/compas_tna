@@ -145,6 +145,7 @@ def vertical_from_zmax(form, zmax, kmax=100, xtol=1e-2, rtol=1e-3, density=1.0, 
         index = k_i[vertex]
         form.vertex_attribute(vertex, 'z', xyz[index, 2])
         form.vertex_attributes(vertex, ['_rx', '_ry', '_rz'], r[index])
+        form.vertex_attributes(vertex, ['px', 'py', 'pz'], p[index])
 
     for edge in form.edges_where({'_is_edge': True}):
         index = uv_i[edge]
