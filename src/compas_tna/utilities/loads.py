@@ -105,8 +105,8 @@ class LoadUpdater(object):
                     p01_off = p1_off - p0_off
                     a -= 0.25 * length_vector(cross_vectors(p01_off, p2 - p0_off))
 
-                else:
-                    a += length_vector(p01) * self.width[0]/2
+                elif mesh.edge_attribute((u, v), '_is_edge'):
+                    a += length_vector(p01)/2 * self.width[0]/2
 
                 # right face
                 fkey = mesh.halfedge[v][u]
@@ -120,7 +120,7 @@ class LoadUpdater(object):
                     p01_off = p1_off - p0_off
                     a -= 0.25 * length_vector(cross_vectors(p01_off, p3 - p0_off))
 
-                else:
+                elif mesh.edge_attribute((v, u), '_is_edge'):
                     a += length_vector(p01)/2 * self.width[0]/2
 
             areas[key_index[u]] = a
