@@ -80,6 +80,7 @@ def vertical_from_zmax(form, zmax, kmax=100, xtol=1e-2, rtol=1e-3, density=1.0, 
     free = list(set(range(vcount)) - set(fixed))
     xyz = array(form.vertices_attributes('xyz'), dtype=float64)
     thick = array(form.vertices_attribute('t'), dtype=float64).reshape((-1, 1))
+    width = array(form.vertices_attribute('w'), dtype=float64).reshape((-1, 1))
     p = array(form.vertices_attributes(('px', 'py', 'pz')), dtype=float64)
 
     edges = list(form.edges_where({'_is_edge': True}))
@@ -99,7 +100,7 @@ def vertical_from_zmax(form, zmax, kmax=100, xtol=1e-2, rtol=1e-3, density=1.0, 
     # --------------------------------------------------------------------------
     # load updater
     # --------------------------------------------------------------------------
-    update_loads = LoadUpdater(form, p0, thickness=thick, density=density)
+    update_loads = LoadUpdater(form, p0, thickness=thick, width=width, density=density)
     # --------------------------------------------------------------------------
     # scale to zmax
     # note that zmax should not exceed scale * diagonal

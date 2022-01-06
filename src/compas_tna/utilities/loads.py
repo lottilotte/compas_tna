@@ -1,7 +1,10 @@
 from numpy import zeros
+from numpy import array
+from numpy import float64
 
 from compas.geometry import length_vector
 from compas.geometry import cross_vectors
+from compas.geometry import offset_polygon
 from compas.numerical import face_matrix
 
 
@@ -42,10 +45,11 @@ class LoadUpdater(object):
     >>> updateloads(p, xyz)
     """
 
-    def __init__(self, mesh, p0, thickness=1.0, density=1.0, live=0.0):
+    def __init__(self, mesh, p0, thickness=1.0, width=0.2, density=1.0, live=0.0):
         self.mesh = mesh
         self.p0 = p0
         self.thickness = thickness
+        self.width = width
         self.density = density
         self.live = live
         self.key_index = mesh.key_index()
@@ -71,19 +75,53 @@ class LoadUpdater(object):
         is_loaded = self.is_loaded
         C = self.F.dot(xyz)
         areas = zeros((xyz.shape[0], 1))
+
+        # compute offsets
+        fkey_key_xyz = {}
+        for fkey in mesh.faces():
+            vertices = mesh.face_vertices(fkey)
+            points = [xyz[key_index[key]] for key in vertices]
+            offset = offset_polygon(points, self.width[0]/2)
+            fkey_key_xyz[fkey] = {}
+            for key, xyz_off in zip(vertices, offset):
+                fkey_key_xyz[fkey][key] = array(xyz_off, dtype=float64)
+
         for u in mesh.vertices():
             p0 = xyz[key_index[u]]
             a = 0
             for v in mesh.halfedge[u]:
                 p1 = xyz[key_index[v]]
                 p01 = p1 - p0
+
+                # left face
                 fkey = mesh.halfedge[u][v]
                 if fkey is not None and is_loaded[fkey]:
-                    p2 = C[fkey_index[fkey]]
+                    p2 = C[fkey_index[fkey]] # the face midpoint
                     a += 0.25 * length_vector(cross_vectors(p01, p2 - p0))
+
+                    # minus the opening
+                    p0_off = fkey_key_xyz[fkey][u]
+                    p1_off = fkey_key_xyz[fkey][v]
+                    p01_off = p1_off - p0_off
+                    a -= 0.25 * length_vector(cross_vectors(p01_off, p2 - p0_off))
+
+                else:
+                    a += length_vector(p01) * self.width[0]/2
+
+                # right face
                 fkey = mesh.halfedge[v][u]
                 if fkey is not None and is_loaded[fkey]:
                     p3 = C[fkey_index[fkey]]
                     a += 0.25 * length_vector(cross_vectors(p01, p3 - p0))
+
+                    # minus the opening
+                    p0_off = fkey_key_xyz[fkey][u]
+                    p1_off = fkey_key_xyz[fkey][v]
+                    p01_off = p1_off - p0_off
+                    a -= 0.25 * length_vector(cross_vectors(p01_off, p2 - p0_off))
+
+                else:
+                    a += length_vector(p01) * self.width[0]/2
+
             areas[key_index[u]] = a
         return areas
